@@ -3,82 +3,99 @@ from services.groq_service import client
 
 def generate_digest(rows):
 
-    email_text = []
-
-    for row in rows:
-
-        email_text.append(
-            f"""
-Category:
-{row.get('category')}
-
-Priority:
-{row.get('priority')}
-
-Summary:
-{row.get('detailed_summary')}
-"""
-        )
+    email_blocks = "\n\n".join(
+        f"Category: {row.get('category')}\n"
+        f"Priority: {row.get('priority')}\n"
+        f"Action Required: {row.get('action_required')}\n"
+        f"Summary: {row.get('detailed_summary')}"
+        for row in rows[:10]
+    )
 
     prompt = f"""
 You are an executive assistant.
 
 Create a professional daily inbox summary.
 
-Format exactly like this:
+STRICT RULES:
 
-Today's inbox contained X emails.
+1. Output MUST start with {{ and end with }}
+2. No markdown. No code fences. No explanation.
+3. NEVER invent facts not present in the email data.
+4. NEVER suggest actions or recommendations not in the data.
+5. NEVER include an email in action_required unless Action Required is true.
+6. Omit any category with zero emails.
+7. Each bullet is one concise sentence from the summary.
+8. Total bullet text must stay under 150 words.
 
-Highlights:
-• ...
-• ...
-• ...
+OUTPUT FORMAT:
 
-Finance:
-• ...
+{{
+    "header": "Today's inbox contained X emails. Y require action.",
+    "highlights": [
+        "<HIGH priority emails only, max 3 bullets>"
+    ],
+    "by_category": {{
+        "FINANCE": ["<bullet>"],
+        "AI_NEWS": ["<bullet>"],
+        "SECURITY": ["<bullet>"],
+        "ACCOUNT": ["<bullet>"],
+        "WORK": ["<bullet>"],
+        "NEWSLETTER": ["<bullet>"],
+        "PROMOTION": ["<bullet>"],
+        "PERSONAL": ["<bullet>"],
+        "SOCIAL": ["<bullet>"],
+        "SHOPPING": ["<bullet>"],
+        "IMPORTANT": ["<bullet>"]
+    }},
+    "action_required": [
+        "<only emails where Action Required is true>"
+    ]
+}}
 
-AI News:
-• ...
+SECTION RULES:
 
-Account Changes:
-• ...
+highlights:
+Only HIGH priority emails.
+Max 3 bullets.
+Empty array [] if none.
 
-Security:
-• ...
+by_category:
+Only include categories present in the data.
+Max 3 bullets per category.
+State what happened. Nothing more.
 
-Action Required:
-Only mention emails where action_required=true.
+action_required:
+Only emails where Action Required is true.
+Empty array [] if none.
+No invented deadlines or urgency.
 
-Rules:
+VIOLATION EXAMPLES — never do these:
 
-- Only report facts from emails.
-- Do NOT suggest optional actions.
-- Do NOT recommend things to explore.
-- Do NOT invent information.
-- Keep under 150 words.
-- Use bullet points.
-- Focus on the most important updates.
+- "You should review your account settings"
+- "Consider exploring the AI tools mentioned"
+- "This may require urgent attention"
+- Adding an email to action_required when Action Required is false
+
+Return JSON only.
 
 Emails:
 
-{chr(10).join(email_text)}
+{email_blocks}
 """
 
-    response = (
-        client.chat.completions.create(
-            model="openai/gpt-oss-120b",
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            temperature=0.3
-        )
+    response = client.chat.completions.create(
+        model="openai/gpt-oss-120b",
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a JSON-only executive inbox summarizer. Output one valid JSON object. Nothing else."
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        temperature=0
     )
 
-    return (
-        response
-        .choices[0]
-        .message.content
-    )
+    return response.choices[0].message.content

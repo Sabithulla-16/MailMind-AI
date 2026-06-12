@@ -35,7 +35,7 @@ scheduler.add_job(
 scheduler.add_job(
     EmailAnalyzerAgent().run,
     "interval",
-    minutes=5
+    minutes=2
 )
 
 scheduler.add_job(
@@ -63,8 +63,8 @@ scheduler.add_job(
 scheduler.add_job(
     TaskReminderAgent().run,
     "cron",
-    hour=10,
-    minute=0
+    hour=9,
+    minute=30
 )
 
 scheduler.add_job(

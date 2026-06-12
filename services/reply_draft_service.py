@@ -10,83 +10,64 @@ def generate_reply_draft(
     intent
 ):
 
-    prompt = f"""<|im_start|>system
-You are a JSON-only email reply generator.
+    prompt = f"""
+TASK: Write a professional email reply FROM the recipient TO the sender.
 
-Your job is to generate SAFE email drafts.
+═══════════════════════════════════════
+ABSOLUTE OUTPUT RULES (never violate):
+═══════════════════════════════════════
+1. Output MUST start with {{ and end with }}
+2. No markdown. No code fences. No explanation. No text outside the JSON.
+3. NEVER hallucinate names, titles, dates, prices, order numbers, or any facts not in the email.
+4. NEVER sign with a name unless a name is explicitly stated in the email body.
+5. NEVER thank the sender for their email (do not write "Thank you for your email" or similar).
+6. Keep the reply concise: 3-5 sentences unless the email clearly requires more.
+7. Use \\n for line breaks inside the reply string.
 
-You MUST never make decisions on behalf of the user.
+═══════════════════════════════════════════
+SAFETY RULE — THE MOST IMPORTANT RULE:
+═══════════════════════════════════════════
+If the email is ANY of the following:
+  → An invitation or event request
+  → A meeting or interview request
+  → A purchase, order, or payment request
+  → A proposal, quotation, or contract
+  → A registration or sign-up request
+  → A travel or accommodation request
+  → Any email where the sender expects a YES or NO
 
-Output must be exactly one valid JSON object.
-<|im_end|>
+Then the reply MUST:
+  ✓ Acknowledge that the message was received
+  ✓ State that it is being reviewed
+  ✓ Indicate a response will follow
+  ✓ Remain completely neutral — no commitment, no refusal
 
-<|im_start|>user
-TASK:
-Write a professional email reply FROM the recipient TO the sender.
+The reply MUST NOT contain:
+  ✗ Acceptance or confirmation of any kind
+  ✗ Decline or rejection of any kind
+  ✗ Any promise, approval, or commitment
+  ✗ Confirmation of attendance, payment, or purchase
 
-STRICT RULES:
+RULE: When in doubt, acknowledge and defer. Never commit.
 
-1. Output MUST be a single valid JSON object.
-2. No markdown.
-3. No code fences.
-4. No explanation.
-5. No text outside JSON.
-6. NEVER hallucinate names, dates, commitments, purchases, approvals, attendance, or decisions.
-7. NEVER thank the sender for their own email.
-8. NEVER sign with a name unless explicitly present in the email.
-9. Keep the reply concise.
-
-IMPORTANT SAFETY RULES:
-
-If the email is:
-
-- an invitation
-- a meeting request
-- a travel request
-- an event invitation
-- a proposal
-- a quotation
-- a purchase request
-- a registration request
-- any email requiring a decision
-
-DO NOT:
-
-- accept
-- decline
-- commit
-- promise
-- approve
-- confirm attendance
-- confirm payment
-- confirm purchase
-
-Instead:
-
-- acknowledge receipt
-- indicate the message is being reviewed
-- state that a response or confirmation will follow
-
-The draft should remain neutral unless the sender's intent is purely informational.
-
-OUTPUT FORMAT:
-
+═══════════════════════════════════
+OUTPUT SCHEMA (return exactly this):
+═══════════════════════════════════
 {{
-  "subject": "Re: <original subject>",
-  "reply": "<email body>"
+  "subject": "Re: {email['subject']}",
+  "reply": "<full email body using \\n for line breaks>"
 }}
 
-USER INTENT:
-{intent}
-
-EMAIL SUBJECT:
-{email["subject"]}
-
-EMAIL BODY:
+═══════════════
+CONTEXT:
+═══════════════
+User Intent: {intent}
+Email Subject: {email["subject"]}
+Email Body:
 {email["body"]}
 
-Return ONLY the JSON object.
-<|im_end|>"""
+Now output the JSON object. Start with {{ and end with }}.
+"""
 
     response = ask_groq(
         prompt

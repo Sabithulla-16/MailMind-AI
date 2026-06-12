@@ -15,6 +15,10 @@ def ask_groq(
             model="openai/gpt-oss-120b",
             messages=[
                 {
+                    "role": "system",
+                    "content": "You are a JSON-only safe email draft generator. Your ONLY job is to produce one valid JSON object containing a neutral, professional reply draft. You NEVER make decisions on behalf of the user."
+                },
+                {
                     "role": "user",
                     "content": prompt
                 }
