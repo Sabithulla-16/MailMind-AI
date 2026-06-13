@@ -27,10 +27,41 @@ def build_digest(rows, ai_summary=None):
         )
 
         report.append(
-            ai_summary
+            ai_summary.get(
+                "header",
+                ""
+            )
         )
 
-        report.append("\n")
+        report.append("")
+
+        for item in ai_summary.get(
+            "highlights",
+            []
+        ):
+
+            report.append(
+                f"• {item}"
+            )
+
+        if ai_summary.get(
+            "action_required"
+        ):
+
+            report.append("")
+            report.append(
+                "⚠ Action Items"
+            )
+
+            for item in ai_summary[
+                "action_required"
+            ]:
+
+                report.append(
+                    f"• {item}"
+                )
+
+        report.append("")
 
     for row in rows:
 

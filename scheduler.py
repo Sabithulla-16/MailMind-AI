@@ -40,45 +40,38 @@ scheduler.add_job(
 
 scheduler.add_job(
     TelegramReportAgent().run,
-    "cron",
-    hour=8,
-    minute=0
+    "interval",
+    minutes=1
 )
 
 scheduler.add_job(
     MorningAgendaAgent().run,
-    "cron",
-    hour=9,
-    minute=0
+    "interval",
+    minutes=2
 )
 
 scheduler.add_job(
     WeeklyReportAgent().run,
-    "cron",
-    day_of_week="sun",
-    hour=18,
-    minute=0
+    "interval",
+    minutes=3
 )
 
 scheduler.add_job(
     TaskReminderAgent().run,
-    "cron",
-    hour=9,
-    minute=30
+    "interval",
+    minutes=2
 )
 
 scheduler.add_job(
     CalendarReminderAgent().run,
-    "cron",
-    hour=8,
-    minute=30
+    "interval",
+    minutes=2
 )
 
 scheduler.add_job(
     EventCleanupAgent().run,
-    "cron",
-    hour=0,
-    minute=5
+    "interval",
+    minutes=5
 )
 
 def start_scheduler():

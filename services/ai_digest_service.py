@@ -1,5 +1,5 @@
 from services.groq_service import client
-
+import json
 
 def generate_digest(rows):
 
@@ -98,4 +98,4 @@ Emails:
         temperature=0
     )
 
-    return response.choices[0].message.content
+    return json.loads(response.choices[0].message.content)
