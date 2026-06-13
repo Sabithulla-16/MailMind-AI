@@ -41,14 +41,14 @@ scheduler.add_job(
 scheduler.add_job(
     TelegramReportAgent().run,
     "cron",
-    hour=8,
+    hour=13,
     minute=0
 )
 
 scheduler.add_job(
     MorningAgendaAgent().run,
     "cron",
-    hour=9,
+    hour=14,
     minute=0
 )
 
@@ -63,15 +63,15 @@ scheduler.add_job(
 scheduler.add_job(
     TaskReminderAgent().run,
     "cron",
-    hour=9,
+    hour=14,
     minute=30
 )
 
 scheduler.add_job(
     CalendarReminderAgent().run,
     "cron",
-    hour=8,
-    minute=30
+    hour=15,
+    minute=0
 )
 
 scheduler.add_job(
