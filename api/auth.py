@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Request
 
-from utils.config import GOOGLE_REDIRECT_URI
-
-from fastapi.responses import RedirectResponse
-
 from fastapi.responses import (
     RedirectResponse,
     HTMLResponse
+)
+
+from utils.config import (
+    GOOGLE_REDIRECT_URI
 )
 
 from services.telegram_service import (
@@ -15,29 +15,24 @@ from services.telegram_service import (
 
 from services.gmail_service import (
     create_flow,
-    get_user_profile,
-    fetch_recent_emails,
-    get_email_details,
-    parse_email
+    get_user_profile
 )
 
 from repositories.user_repo import (
     create_user,
     set_telegram_chat_id,
-    get_user_by_telegram_chat_id
-)
-
-from repositories.user_repo import (
-    set_active_account
-)
-
-from repositories.user_repo import (
+    get_user_by_telegram_chat_id,
+    set_active_account,
     get_user_by_email
 )
 
-from repositories.gmail_repo import save_gmail_account
+from repositories.gmail_repo import (
+    save_gmail_account
+)
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(
+    prefix="/auth"
+)
 
 flow_store = {}
 
@@ -50,19 +45,22 @@ def google_login(
 
     flow = create_flow()
 
-    flow.redirect_uri = GOOGLE_REDIRECT_URI
-
-    authorization_url, state = flow.authorization_url(
-        access_type="offline",
-        include_granted_scopes="true",
-        prompt="consent"
+    flow.redirect_uri = (
+        GOOGLE_REDIRECT_URI
     )
 
-    flow_store[state] = flow
+    authorization_url, state = (
+        flow.authorization_url(
+            access_type="offline",
+            include_granted_scopes="true",
+            prompt="consent"
+        )
+    )
 
-    request.session[
-        "telegram_chat_id"
-    ] = chat_id
+    flow_store[state] = {
+        "flow": flow,
+        "chat_id": chat_id
+    }
 
     return RedirectResponse(
         authorization_url
@@ -71,34 +69,45 @@ def google_login(
 
 @router.get("/google/callback")
 def google_callback(
-    request: Request,
-    chat_id: str = None
+    request: Request
 ):
 
-    state = request.query_params.get("state")
-    code = request.query_params.get("code")
+    state = request.query_params.get(
+        "state"
+    )
 
-    flow = flow_store.get(state)
+    code = request.query_params.get(
+        "code"
+    )
 
-    if not flow:
+    stored = (
+        flow_store.get(state)
+    )
+
+    if not stored:
+
         return {
             "success": False,
             "error": "Invalid state"
         }
 
+    flow = stored["flow"]
+
+    chat_id = stored["chat_id"]
+
     try:
 
-        flow.fetch_token(code=code)
-
-        credentials = flow.credentials
-
-        profile = get_user_profile(
-            credentials
+        flow.fetch_token(
+            code=code
         )
 
-        chat_id = (
-            request.session.get(
-                "telegram_chat_id"
+        credentials = (
+            flow.credentials
+        )
+
+        profile = (
+            get_user_profile(
+                credentials
             )
         )
 
@@ -116,7 +125,9 @@ def google_callback(
 
             user = (
                 get_user_by_email(
-                    profile["emailAddress"]
+                    profile[
+                        "emailAddress"
+                    ]
                 )
             )
 
@@ -124,7 +135,9 @@ def google_callback(
 
             user = (
                 create_user(
-                    profile["emailAddress"]
+                    profile[
+                        "emailAddress"
+                    ]
                 )
             )
 
@@ -138,7 +151,9 @@ def google_callback(
         gmail_account = (
             save_gmail_account(
                 user_id=user["id"],
-                gmail_address=profile["emailAddress"],
+                gmail_address=profile[
+                    "emailAddress"
+                ],
                 access_token=credentials.token,
                 refresh_token=credentials.refresh_token
             )
@@ -160,9 +175,9 @@ def google_callback(
                 send_message(
                     int(chat_id),
                     (
-                        "✅ Gmail account connected successfully!\n\n"
+                        "✅ Gmail Connected Successfully\n\n"
                         f"📧 {profile['emailAddress']}\n\n"
-                        "You can now return to MailMind AI."
+                        "You may now start using MailMind AI!"
                     )
                 )
 
@@ -172,33 +187,44 @@ def google_callback(
                     f"Telegram notify failed: {e}"
                 )
 
+        flow_store.pop(
+            state,
+            None
+        )
+
         return HTMLResponse(
             """
             <html>
             <head>
                 <title>MailMind AI</title>
-
-                <meta
-                    http-equiv="refresh"
-                    content="3;url=https://t.me/mailmindai_bot"
-                />
             </head>
 
             <body style="
                 font-family: Arial;
                 text-align: center;
                 padding-top: 100px;
+                background-color: #f8fafc;
             ">
-                <h1>✅ Gmail Connected</h1>
+
+                <h1>
+                    ✅ Gmail Connected Successfully
+                </h1>
 
                 <p>
-                    Your account has been connected
-                    successfully.
+                    Your Gmail account has been
+                    linked to MailMind AI.
                 </p>
 
                 <p>
-                    Redirecting you back to Telegram...
+                    A confirmation message has
+                    been sent to Telegram.
                 </p>
+
+                <p>
+                    You may now close this tab
+                    and return to Telegram.
+                </p>
+
             </body>
             </html>
             """

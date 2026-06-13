@@ -1,6 +1,7 @@
 from repositories.calendar_repo import (
     save_event,
-    event_exists
+    event_exists,
+    get_event_by_id
 )
 
 from repositories.analysis_repo import (
@@ -12,8 +13,17 @@ from services.event_extractor_service import (
     extract_event
 )
 
-from repositories.calendar_repo import (
-    get_event_by_id
+from repositories.calendar_google_repo import (
+    get_google_account
+)
+
+from services.calendar_service import (
+    get_calendar_service
+)
+
+from datetime import (
+    datetime,
+    timedelta
 )
 
 class CalendarAgent:
@@ -30,6 +40,11 @@ class CalendarAgent:
         )
 
         if not event:
+            return False
+
+        if not event.get(
+            "google_event_id"
+        ):
             return False
 
         account = (

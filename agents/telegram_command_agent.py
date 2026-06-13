@@ -92,6 +92,62 @@ from repositories.digest_repo import (
     get_latest_digest_by_account
 )
 
+
+HELP_MENU = (
+    "📬 MailMind AI — Command Reference\n"
+    "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+
+    "👤 Accounts\n"
+    "/accounts — List connected Gmail accounts\n"
+    "/use email@gmail.com — Switch active account\n\n"
+
+    "📊 Reports\n"
+    "/today — Daily AI summary report\n"
+    "/digest — AI digest grouped by category\n"
+    "/stats — Email volume & category breakdown\n\n"
+
+    "📩 Emails\n"
+    "/latest — Most recent email\n"
+    "/recent — Last 10 emails\n"
+    "/important — High-priority emails\n"
+    "/action — Emails needing your attention\n"
+    "/search keyword — Full-text inbox search\n\n"
+
+    "🤖 AI Assistant\n"
+    "/ask question — Ask anything about your emails\n\n"
+
+    "📂 Categories\n"
+    "/ainews — AI & tech newsletters\n"
+    "/finance — Billing & financial emails\n"
+    "/account — Account notifications\n"
+    "/security — Security & login alerts\n\n"
+
+    "📅 Calendar\n"
+    "/events — Upcoming events\n"
+    "/todayevents — Today's schedule\n"
+    "/deleteevent 1 — Remove event by number\n"
+    "/completeevent 1 — Mark event as done\n"
+    "/rescheduleevent 1 2026-06-25 — Reschedule event\n\n"
+
+    "📋 Tasks\n"
+    "/tasks — All pending tasks\n"
+    "/urgent — High-priority tasks only\n"
+    "/done 1 — Complete task by number\n\n"
+
+    "✉️ Draft & Reply\n"
+    "/recent — Pick an email to reply to\n"
+    "/draft 1 — Start drafting reply\n"
+    "/accept — Draft an acceptance reply\n"
+    "/decline — Draft a decline reply\n"
+    "/askdetails — Request more info from sender\n"
+    "/custom your message — Custom reply intent\n"
+    "/sendlast — Send the last drafted reply\n\n"
+
+    "━━━━━━━━━━━━━━━━━━━━━━\n"
+    "Type /help anytime to see this menu."
+)
+
+
 class TelegramCommandAgent:
 
     def __init__(self):
@@ -172,6 +228,57 @@ class TelegramCommandAgent:
 
         text = text.strip()
 
+        # ── Onboarding ──────────────────────────────
+
+        if text == "/start":
+
+            user = (
+                get_user_by_telegram_chat_id(
+                    chat_id
+                )
+            )
+
+            if user:
+
+                accounts = (
+                    get_user_accounts(
+                        user["id"]
+                    )
+                )
+
+                if accounts:
+
+                    email = (
+                        accounts[0][
+                            "gmail_address"
+                        ]
+                    )
+
+                    return (
+                        "👋 Welcome back to MailMind AI!\n\n"
+                        f"✅ Connected as: {email}\n\n"
+                        "Type /help to see all commands."
+                    )
+
+            return (
+                "👋 Welcome to MailMind AI!\n\n"
+                "I'm your intelligent email assistant. "
+                "I can summarise your inbox, draft replies, "
+                "manage your calendar & tasks, and answer "
+                "questions about your emails.\n\n"
+                "To get started, connect your Gmail account "
+                "via the web dashboard, then come back here.\n\n"
+                "Once connected, type /help to see everything I can do."
+            )
+
+        # ── Help ────────────────────────────────────
+
+        if text in ("/help", "/start help"):
+
+            return HELP_MENU
+
+        # ── Reports ─────────────────────────────────
+
         if text == "/today":
 
             active_account_id = (
@@ -190,6 +297,8 @@ class TelegramCommandAgent:
                 return "No report found."
 
             return report["report_text"][:3500]
+
+        # ── Category shortcuts ───────────────────────
 
         if text == "/ainews":
 
@@ -309,6 +418,8 @@ class TelegramCommandAgent:
 
             return "\n".join(output)
 
+        # ── Priority & action ────────────────────────
+
         if text == "/important":
 
             active_account_id = (
@@ -355,7 +466,7 @@ class TelegramCommandAgent:
                 return "No pending actions."
 
             output = [
-                "⚠ Action Required\n"
+                "⚠️ Action Required\n"
             ]
 
             for email in emails:
@@ -364,6 +475,8 @@ class TelegramCommandAgent:
                 )
 
             return "\n".join(output)
+
+        # ── Email views ──────────────────────────────
 
         if text == "/latest":
 
@@ -388,6 +501,44 @@ class TelegramCommandAgent:
                 f"Priority: {email.get('priority')}\n\n"
                 f"{email.get('short_summary')}"
             )
+
+        if text == "/recent":
+
+            active_account_id = (
+                self._get_active_account_id(
+                    chat_id
+                )
+            )
+
+            emails = (
+                get_recent_emails_by_account(
+                    active_account_id
+                )
+            )
+
+            if not emails:
+
+                return (
+                    "No recent emails."
+                )
+
+            output = [
+                "📩 Recent Emails\n"
+            ]
+
+            for i, email in enumerate(
+                emails,
+                start=1
+            ):
+
+                output.append(
+                    f"{i}. "
+                    f"{email['short_summary']}\n"
+                )
+
+            return "\n".join(output)
+
+        # ── Digest & stats ───────────────────────────
 
         if text == "/digest":
 
@@ -446,7 +597,7 @@ class TelegramCommandAgent:
             ):
 
                 message += (
-                    "\n\n⚠ Action Required"
+                    "\n\n⚠️ Action Required"
                 )
 
                 for item in digest_data[
@@ -506,6 +657,8 @@ class TelegramCommandAgent:
 
             return "\n".join(output)
 
+        # ── AI assistant ─────────────────────────────
+
         if text.startswith("/ask "):
 
             question = (
@@ -529,9 +682,9 @@ class TelegramCommandAgent:
                 )
             )
 
-        if text.startswith(
-            "/search "
-        ):
+        # ── Search ───────────────────────────────────
+
+        if text.startswith("/search "):
 
             keyword = (
                 text.replace(
@@ -558,7 +711,7 @@ class TelegramCommandAgent:
 
                 return (
                     f"No results for "
-                    f"{keyword}"
+                    f"'{keyword}'."
                 )
 
             output = [
@@ -573,6 +726,8 @@ class TelegramCommandAgent:
                 )
 
             return "\n".join(output)
+
+        # ── Calendar ─────────────────────────────────
 
         if text == "/events":
 
@@ -610,22 +765,15 @@ class TelegramCommandAgent:
                 )
 
             output.append(
-                "\n/deleteevent 1"
-            )
-
-            output.append(
-                "/rescheduleevent 1 2026-06-25"
-            )
-
-            output.append(
+                "\n💡 Actions:\n"
+                "/deleteevent 1\n"
+                "/rescheduleevent 1 2026-06-25\n"
                 "/completeevent 1"
             )
 
             return "\n\n".join(output)
 
-        if text.startswith(
-            "/deleteevent "
-        ):
+        if text.startswith("/deleteevent "):
 
             try:
 
@@ -665,14 +813,12 @@ class TelegramCommandAgent:
             except Exception as e:
 
                 return (
-                    f"Usage:\n"
-                    f"/deleteevent 1\n\n"
+                    f"❌ Could not delete event.\n\n"
+                    f"Usage: /deleteevent 1\n\n"
                     f"{e}"
                 )
 
-        if text.startswith(
-            "/completeevent "
-        ):
+        if text.startswith("/completeevent "):
 
             try:
 
@@ -708,13 +854,11 @@ class TelegramCommandAgent:
             except Exception:
 
                 return (
-                    "Usage:\n"
-                    "/completeevent 1"
-                )  
+                    "❌ Could not complete event.\n\n"
+                    "Usage: /completeevent 1"
+                )
 
-        if text.startswith(
-            "/rescheduleevent "
-        ):
+        if text.startswith("/rescheduleevent "):
 
             try:
 
@@ -765,9 +909,9 @@ class TelegramCommandAgent:
             except Exception:
 
                 return (
-                    "Usage:\n"
-                    "/rescheduleevent 1 2026-06-25"
-                )  
+                    "❌ Could not reschedule event.\n\n"
+                    "Usage: /rescheduleevent 1 2026-06-25"
+                )
 
         if text == "/todayevents":
 
@@ -802,6 +946,8 @@ class TelegramCommandAgent:
                 "\n".join(output)
             )
 
+        # ── Tasks ────────────────────────────────────
+
         if text == "/tasks":
 
             active_account_id = (
@@ -830,6 +976,10 @@ class TelegramCommandAgent:
                     f"{i}. "
                     f"{task['title']}"
                 )
+
+            output.append(
+                "\n💡 Mark done: /done 1"
+            )
 
             return "\n".join(output)
 
@@ -872,10 +1022,10 @@ class TelegramCommandAgent:
             except Exception:
 
                 return (
-                    "Usage:\n"
-                    "/done 1"
+                    "❌ Could not complete task.\n\n"
+                    "Usage: /done 1"
                 )
-            
+
         if text == "/urgent":
 
             active_account_id = (
@@ -919,42 +1069,8 @@ class TelegramCommandAgent:
             return (
                 "\n\n".join(output)
             )
-        
-        if text == "/recent":
 
-            active_account_id = (
-                self._get_active_account_id(
-                    chat_id
-                )
-            )
-
-            emails = (
-                get_recent_emails_by_account(
-                    active_account_id
-                )
-            )
-
-            if not emails:
-
-                return (
-                    "No recent emails."
-                )
-
-            output = [
-                "📩 Recent Emails\n"
-            ]
-
-            for i, email in enumerate(
-                emails,
-                start=1
-            ):
-
-                output.append(
-                    f"{i}. "
-                    f"{email['short_summary']}\n"
-                )
-
-            return "\n".join(output)
+        # ── Draft & reply workflow ───────────────────
 
         if text.startswith("/draft "):
 
@@ -970,8 +1086,8 @@ class TelegramCommandAgent:
             except ValueError:
 
                 return (
-                    "Usage:\n"
-                    "/draft 1"
+                    "❌ Invalid number.\n\n"
+                    "Usage: /draft 1"
                 )
 
             return (
@@ -999,8 +1115,8 @@ class TelegramCommandAgent:
             if not session:
 
                 return (
-                    "No draft selected.\n"
-                    "Use /recent first."
+                    "⚠️ No draft selected.\n\n"
+                    "Use /recent then /draft 1 first."
                 )
 
             email = (
@@ -1037,7 +1153,8 @@ class TelegramCommandAgent:
             if not session:
 
                 return (
-                    "No draft selected."
+                    "⚠️ No draft selected.\n\n"
+                    "Use /recent then /draft 1 first."
                 )
 
             email = (
@@ -1074,7 +1191,8 @@ class TelegramCommandAgent:
             if not session:
 
                 return (
-                    "No draft selected."
+                    "⚠️ No draft selected.\n\n"
+                    "Use /recent then /draft 1 first."
                 )
 
             email = (
@@ -1094,9 +1212,7 @@ class TelegramCommandAgent:
                 )
             )
 
-        if text.startswith(
-            "/custom "
-        ):
+        if text.startswith("/custom "):
 
             custom_text = (
                 text.replace(
@@ -1121,7 +1237,8 @@ class TelegramCommandAgent:
             if not session:
 
                 return (
-                    "No draft selected."
+                    "⚠️ No draft selected.\n\n"
+                    "Use /recent then /draft 1 first."
                 )
 
             email = (
@@ -1158,7 +1275,8 @@ class TelegramCommandAgent:
             if not session:
 
                 return (
-                    "No draft found."
+                    "⚠️ No draft found.\n\n"
+                    "Use /recent then /draft 1 first."
                 )
 
             return (
@@ -1169,6 +1287,8 @@ class TelegramCommandAgent:
                     ]
                 )
             )
+
+        # ── Account management ───────────────────────
 
         if text == "/accounts":
 
@@ -1182,7 +1302,8 @@ class TelegramCommandAgent:
 
                 return (
                     "❌ No Gmail account connected.\n\n"
-                    "Use /start to connect Gmail."
+                    "Visit the web dashboard to connect Gmail, "
+                    "then send /start."
                 )
 
             accounts = (
@@ -1190,6 +1311,14 @@ class TelegramCommandAgent:
                     user["id"]
                 )
             )
+
+            if not accounts:
+
+                return (
+                    "❌ No Gmail accounts found.\n\n"
+                    "Visit the web dashboard to connect Gmail, "
+                    "then send /start."
+                )
 
             output = [
                 "📧 Connected Accounts\n"
@@ -1216,11 +1345,13 @@ class TelegramCommandAgent:
                     f"{account['gmail_address']}"
                 )
 
+            output.append(
+                "\n💡 Switch: /use email@gmail.com"
+            )
+
             return "\n".join(output)
 
-        if text.startswith(
-            "/use "
-        ):
+        if text.startswith("/use "):
 
             email = (
                 text.replace(
@@ -1237,10 +1368,10 @@ class TelegramCommandAgent:
             )
 
             accounts = (
-                    get_user_accounts(
-                        user["id"]
-                    )
+                get_user_accounts(
+                    user["id"]
                 )
+            )
 
             account = next(
                 (
@@ -1253,7 +1384,8 @@ class TelegramCommandAgent:
             if not account:
 
                 return (
-                    "Account not found."
+                    f"❌ Account not found: {email}\n\n"
+                    "Use /accounts to see connected accounts."
                 )
 
             set_active_account(
@@ -1262,58 +1394,10 @@ class TelegramCommandAgent:
             )
 
             return (
-                "✅ Active account changed\n\n"
-                f"{email}"
+                "✅ Active account switched\n\n"
+                f"📧 {email}"
             )
 
-        return (
-            "📬 MailMind AI\n\n"
+        # ── Fallback ─────────────────────────────────
 
-            "📧 Accounts\n"
-            "/accounts\n"
-            "/use email@gmail.com\n"
-
-            "📊 Reports\n"
-            "/today\n"
-            "/digest\n"
-            "/stats\n"
-
-            "📩 Emails\n"
-            "/latest\n"
-            "/important\n"
-            "/action\n"
-            "/search keyword\n"
-
-            "🤖 AI Assistant\n"
-            "/ask question\n"
-
-            "📂 Categories\n"
-            "/ainews\n"
-            "/finance\n"
-            "/account\n"
-            "/security\n"
-
-            "📅 Calendar\n"
-            "/events\n"
-            "/todayevents\n"
-            "/deleteevent 1\n"
-            "/rescheduleevent 1 2026-06-25\n"
-            "/completeevent 1\n"
-
-            "📋 Tasks\n"
-            "/tasks\n"
-            "/done 1\n"
-            "/urgent\n"
-
-            "✉ Draft Reply Workflow\n"
-            "/recent\n"
-            "/draft 1\n"
-
-            "/accept\n"
-            "/decline\n"
-            "/askdetails\n"
-            "/custom your message\n"
-
-            "/sendlast\n"
-
-        )
+        return HELP_MENU
