@@ -35,6 +35,9 @@ class TaskAgent:
                     )
                 )
 
+                print("TASK RESULT:")
+                print(task)
+
                 if not task.get(
                     "has_task"
                 ):

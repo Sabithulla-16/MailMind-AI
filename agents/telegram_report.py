@@ -61,9 +61,11 @@ class TelegramReportAgent:
 
                 continue
 
-        ai_summary = (
-            generate_digest(rows)
-        )
+        ai_summary = generate_digest(rows)
+
+        print("AI SUMMARY:")
+        print(ai_summary)
+        print(type(ai_summary))
 
         save_digest(
             account["id"],

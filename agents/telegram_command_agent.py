@@ -391,10 +391,52 @@ class TelegramCommandAgent:
             if not digest:
                 return "No digest found."
 
-            return (
-                "🧠 Latest AI Digest\n\n"
-                + digest["digest_text"]
+            digest_data = (
+                digest["digest_text"]
             )
+
+            message = (
+                "🧠 Latest AI Digest\n\n"
+                + digest_data.get(
+                    "header",
+                    ""
+                )
+            )
+
+            for category, items in (
+                digest_data.get(
+                    "by_category",
+                    {}
+                ).items()
+            ):
+
+                message += (
+                    f"\n\n📂 {category}"
+                )
+
+                for item in items:
+
+                    message += (
+                        f"\n• {item}"
+                    )
+
+            if digest_data.get(
+                "action_required"
+            ):
+
+                message += (
+                    "\n\n⚠ Action Required"
+                )
+
+                for item in digest_data[
+                    "action_required"
+                ]:
+
+                    message += (
+                        f"\n• {item}"
+                    )
+
+            return message
 
         if text == "/stats":
 
@@ -573,6 +615,9 @@ class TelegramCommandAgent:
                     active_account_id
                 )
             )
+
+            if not tasks:
+                return "✅ No pending tasks."
 
             output = [
                 "📋 Pending Tasks\n"

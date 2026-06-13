@@ -1,5 +1,6 @@
 from database.supabase import supabase
 
+
 def save_gmail_account(
     user_id,
     gmail_address,
@@ -17,7 +18,8 @@ def save_gmail_account(
                 "access_token": access_token,
                 "refresh_token": refresh_token,
                 "connected": True
-            }
+            },
+            on_conflict="gmail_address"
         )
         .execute()
     )

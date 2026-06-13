@@ -33,6 +33,9 @@ class CalendarAgent:
                     extract_event(email)
                 )
 
+                print("EVENT RESULT:")
+                print(result)
+
                 if not result.get(
                     "has_event"
                 ):

@@ -63,6 +63,29 @@ def build_digest(rows, ai_summary=None):
 
         report.append("")
 
+        category_summaries = (
+            ai_summary.get(
+                "by_category",
+                {}
+            )
+        )
+
+        for category, items in (
+            category_summaries.items()
+        ):
+
+            report.append(
+                f"\n📂 {category}"
+            )
+
+            for item in items:
+
+                report.append(
+                    f"• {item}"
+                )
+
+        report.append("")
+
     for row in rows:
 
         category = (
@@ -155,22 +178,22 @@ def build_digest(rows, ai_summary=None):
         "NEWSLETTER": "📰"
     }
 
-    for category in priority_order:
+    if not ai_summary:
 
-        if category not in grouped:
-            continue
+        for category in priority_order:
 
-        emails = grouped[category]
+            if category not in grouped:
+                continue
 
-        report.append(
-            f"\n{emoji_map.get(category,'📂')} {category}"
-        )
-
-        for email in emails[:5]:
+            emails = grouped[category]
 
             report.append(
-                f"• "
-                f"{email.get('short_summary')}"
+                f"\n{emoji_map.get(category,'📂')} {category}"
             )
 
-    return "\n".join(report)
+            for email in emails[:5]:
+
+                report.append(
+                    f"• "
+                    f"{email.get('short_summary')}"
+                )

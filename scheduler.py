@@ -24,6 +24,9 @@ from agents.event_cleanup_agent import (
     EventCleanupAgent
 )
 
+from agents.calendar_agent import CalendarAgent
+from agents.task_agent import TaskAgent
+
 scheduler = BlockingScheduler()
 
 scheduler.add_job(
@@ -70,6 +73,18 @@ scheduler.add_job(
 
 scheduler.add_job(
     EventCleanupAgent().run,
+    "interval",
+    minutes=5
+)
+
+scheduler.add_job(
+    CalendarAgent().run,
+    "interval",
+    minutes=5
+)
+
+scheduler.add_job(
+    TaskAgent().run,
     "interval",
     minutes=5
 )
