@@ -77,8 +77,9 @@ These email types NEVER contain calendar events:
   ✗ Shipping or order updates (unless a delivery appointment exists)
 
 RULE: Only return has_event: true if a SPECIFIC date (YYYY-MM-DD) can be extracted.
-RULE: The event must require the user to be somewhere or do something at a set time.
-
+RULE: The event must contain a specific actionable date.
+This includes meetings, interviews, appointments,
+deadlines, due dates, renewal dates, and payment dates.
 ═══════════════
 EMAIL DATA:
 ═══════════════

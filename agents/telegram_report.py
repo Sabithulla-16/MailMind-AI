@@ -38,19 +38,15 @@ class TelegramReportAgent:
 
         for account in accounts:
 
-            user = (
-                get_user_by_id(
-                    account["user_id"]
-                )
+            user = get_user_by_id(
+                account["user_id"]
             )
 
             if not user:
                 continue
 
-            rows = (
-                get_today_analysis_by_account(
-                    account["id"]
-                )
+            rows = get_today_analysis_by_account(
+                account["id"]
             )
 
             if not rows:
@@ -61,36 +57,35 @@ class TelegramReportAgent:
 
                 continue
 
-        ai_summary = generate_digest(rows)
+            ai_summary = generate_digest(
+                rows
+            )
 
-        print("AI SUMMARY:")
-        print(ai_summary)
-        print(type(ai_summary))
+            print("AI SUMMARY:")
+            print(ai_summary)
 
-        save_digest(
-            account["id"],
-            ai_summary,
-            len(rows)
-        )
+            save_digest(
+                account["id"],
+                ai_summary,
+                len(rows)
+            )
 
-        report = build_digest(
-            rows,
-            ai_summary
-        )
+            report = build_digest(
+                rows,
+                ai_summary
+            )
 
-        send_message(
-            report,
-            user[
-                "telegram_chat_id"
-            ]
-        )
+            send_message(
+                report,
+                user["telegram_chat_id"]
+            )
 
-        save_report(
-            account["id"],
-            report,
-            len(rows)
-        )
+            save_report(
+                account["id"],
+                report,
+                len(rows)
+            )
 
-        print(
-            "Telegram report sent."
-        )
+            print(
+                f"Telegram report sent for {account['gmail_address']}"
+            )

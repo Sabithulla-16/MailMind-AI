@@ -1,3 +1,5 @@
+import json
+
 from repositories.search_repo import (
     search_emails_by_account,
     get_by_category_and_account,
@@ -8,6 +10,19 @@ from repositories.search_repo import (
     get_high_priority_by_account,
     get_action_required_by_account,
     get_recent_emails_by_account
+)
+
+from repositories.calendar_repo import (
+    get_upcoming_events_by_account,
+    get_today_events_by_account,
+    get_all_events,
+    delete_event,
+    mark_completed,
+    update_event_date
+)
+
+from agents.calendar_agent import (
+    CalendarAgent
 )
 
 from repositories.task_repo import (
@@ -391,9 +406,15 @@ class TelegramCommandAgent:
             if not digest:
                 return "No digest found."
 
-            digest_data = (
-                digest["digest_text"]
-            )
+            try:
+
+                digest_data = json.loads(
+                    digest["digest_text"]
+                )
+
+            except Exception:
+
+                return "Invalid digest format."
 
             message = (
                 "🧠 Latest AI Digest\n\n"
@@ -556,7 +577,9 @@ class TelegramCommandAgent:
         if text == "/events":
 
             active_account_id = (
-                self._get_active_account_id(chat_id)
+                self._get_active_account_id(
+                    chat_id
+                )
             )
 
             events = (
@@ -565,11 +588,186 @@ class TelegramCommandAgent:
                 )
             )
 
-            return (
-                self._format_events(
-                    events
+            if not events:
+
+                return (
+                    "📅 No upcoming events."
                 )
+
+            output = [
+                "📅 Upcoming Events\n"
+            ]
+
+            for i, event in enumerate(
+                events,
+                start=1
+            ):
+
+                output.append(
+                    f"{i}. "
+                    f"{event['title']}\n"
+                    f"📅 {event['event_date']}"
+                )
+
+            output.append(
+                "\n/deleteevent 1"
             )
+
+            output.append(
+                "/rescheduleevent 1 2026-06-25"
+            )
+
+            output.append(
+                "/completeevent 1"
+            )
+
+            return "\n\n".join(output)
+
+        if text.startswith(
+            "/deleteevent "
+        ):
+
+            try:
+
+                index = int(
+                    text.split()[1]
+                )
+
+                active_account_id = (
+                    self._get_active_account_id(
+                        chat_id
+                    )
+                )
+
+                events = (
+                    get_upcoming_events_by_account(
+                        active_account_id
+                    )
+                )
+
+                event = (
+                    events[index - 1]
+                )
+
+                CalendarAgent().delete_google_event(
+                    event["id"]
+                )
+
+                delete_event(
+                    event["id"]
+                )
+
+                return (
+                    f"🗑 Deleted:\n"
+                    f"{event['title']}"
+                )
+
+            except Exception as e:
+
+                return (
+                    f"Usage:\n"
+                    f"/deleteevent 1\n\n"
+                    f"{e}"
+                )
+
+        if text.startswith(
+            "/completeevent "
+        ):
+
+            try:
+
+                index = int(
+                    text.split()[1]
+                )
+
+                active_account_id = (
+                    self._get_active_account_id(
+                        chat_id
+                    )
+                )
+
+                events = (
+                    get_upcoming_events_by_account(
+                        active_account_id
+                    )
+                )
+
+                event = (
+                    events[index - 1]
+                )
+
+                mark_completed(
+                    event["id"]
+                )
+
+                return (
+                    f"✅ Completed:\n"
+                    f"{event['title']}"
+                )
+
+            except Exception:
+
+                return (
+                    "Usage:\n"
+                    "/completeevent 1"
+                )  
+
+        if text.startswith(
+            "/rescheduleevent "
+        ):
+
+            try:
+
+                parts = (
+                    text.split()
+                )
+
+                index = int(
+                    parts[1]
+                )
+
+                new_date = (
+                    parts[2]
+                )
+
+                active_account_id = (
+                    self._get_active_account_id(
+                        chat_id
+                    )
+                )
+
+                events = (
+                    get_upcoming_events_by_account(
+                        active_account_id
+                    )
+                )
+
+                event = (
+                    events[index - 1]
+                )
+
+                CalendarAgent().update_google_event_date(
+                    event["id"],
+                    new_date
+                )
+
+                update_event_date(
+                    event["id"],
+                    new_date
+                )
+
+                return (
+                    f"📅 Rescheduled:\n"
+                    f"{event['title']}\n"
+                    f"→ {new_date}"
+                )
+
+            except Exception:
+
+                return (
+                    "Usage:\n"
+                    "/rescheduleevent 1 2026-06-25"
+                )  
 
         if text == "/todayevents":
 
@@ -1098,6 +1296,9 @@ class TelegramCommandAgent:
             "📅 Calendar\n"
             "/events\n"
             "/todayevents\n"
+            "/deleteevent 1\n"
+            "/rescheduleevent 1 2026-06-25\n"
+            "/completeevent 1\n"
 
             "📋 Tasks\n"
             "/tasks\n"

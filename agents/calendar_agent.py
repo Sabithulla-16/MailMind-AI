@@ -12,8 +12,109 @@ from services.event_extractor_service import (
     extract_event
 )
 
+from repositories.calendar_repo import (
+    get_event_by_id
+)
 
 class CalendarAgent:
+
+    def delete_google_event(
+        self,
+        calendar_event_id
+    ):
+
+        event = (
+            get_event_by_id(
+                calendar_event_id
+            )
+        )
+
+        if not event:
+            return False
+
+        account = (
+            get_google_account(
+                event[
+                    "gmail_account_id"
+                ]
+            )
+        )
+
+        service = (
+            get_calendar_service(
+                account["access_token"],
+                account["refresh_token"]
+            )
+        )
+
+        service.events().delete(
+            calendarId="primary",
+            eventId=event[
+                "google_event_id"
+            ]
+        ).execute()
+
+        return True
+
+    def update_google_event_date(
+        self,
+        calendar_event_id,
+        new_date
+    ):
+
+        event = (
+            get_event_by_id(
+                calendar_event_id
+            )
+        )
+
+        account = (
+            get_google_account(
+                event[
+                    "gmail_account_id"
+                ]
+            )
+        )
+
+        service = (
+            get_calendar_service(
+                account["access_token"],
+                account["refresh_token"]
+            )
+        )
+
+        google_event = (
+            service.events()
+            .get(
+                calendarId="primary",
+                eventId=event[
+                    "google_event_id"
+                ]
+            )
+            .execute()
+        )
+
+        google_event["start"] = {
+            "date": new_date
+        }
+
+        google_event["end"] = {
+            "date": (
+                datetime.strptime(
+                    new_date,
+                    "%Y-%m-%d"
+                )
+                + timedelta(days=1)
+            ).strftime("%Y-%m-%d")
+        }
+
+        service.events().update(
+            calendarId="primary",
+            eventId=event[
+                "google_event_id"
+            ],
+            body=google_event
+        ).execute()
 
     def run(self):
 

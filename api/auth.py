@@ -4,6 +4,15 @@ from utils.config import GOOGLE_REDIRECT_URI
 
 from fastapi.responses import RedirectResponse
 
+from fastapi.responses import (
+    RedirectResponse,
+    HTMLResponse
+)
+
+from services.telegram_service import (
+    send_message
+)
+
 from services.gmail_service import (
     create_flow,
     get_user_profile,
@@ -144,12 +153,56 @@ def google_callback(
                 gmail_account["id"]
             )
 
-        return {
-            "success": True,
-            "email": profile.get("emailAddress"),
-            "messages_total": profile.get("messagesTotal"),
-            "threads_total": profile.get("threadsTotal")
-        }
+        if chat_id:
+
+            try:
+
+                send_message(
+                    int(chat_id),
+                    (
+                        "✅ Gmail account connected successfully!\n\n"
+                        f"📧 {profile['emailAddress']}\n\n"
+                        "You can now return to MailMind AI."
+                    )
+                )
+
+            except Exception as e:
+
+                print(
+                    f"Telegram notify failed: {e}"
+                )
+
+        return HTMLResponse(
+            """
+            <html>
+            <head>
+                <title>MailMind AI</title>
+
+                <meta
+                    http-equiv="refresh"
+                    content="3;url=https://t.me/mailmindai_bot"
+                />
+            </head>
+
+            <body style="
+                font-family: Arial;
+                text-align: center;
+                padding-top: 100px;
+            ">
+                <h1>✅ Gmail Connected</h1>
+
+                <p>
+                    Your account has been connected
+                    successfully.
+                </p>
+
+                <p>
+                    Redirecting you back to Telegram...
+                </p>
+            </body>
+            </html>
+            """
+        )
 
     except Exception as e:
 

@@ -1,15 +1,14 @@
 from repositories.gmail_repo import (
-    get_all_gmail_accounts
+    get_account_by_id
 )
 
 
-def get_google_account():
+def get_google_account(
+    gmail_account_id
+):
 
-    accounts = (
-        get_all_gmail_accounts()
+    return (
+        get_account_by_id(
+            gmail_account_id
+        )
     )
-
-    if not accounts:
-        return None
-
-    return accounts[0]

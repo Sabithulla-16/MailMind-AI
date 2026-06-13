@@ -24,6 +24,10 @@ from agents.event_cleanup_agent import (
     EventCleanupAgent
 )
 
+from agents.calendar_sync_agent import (
+    CalendarSyncAgent
+)
+
 from agents.calendar_agent import CalendarAgent
 from agents.task_agent import TaskAgent
 
@@ -89,6 +93,12 @@ scheduler.add_job(
     minutes=5
 )
 
+scheduler.add_job(
+    CalendarSyncAgent().run,
+    "interval",
+    minutes=5
+)
+
 def start_scheduler():
 
     print(
@@ -101,3 +111,4 @@ def start_scheduler():
 if __name__ == "__main__":
 
     start_scheduler()
+    
