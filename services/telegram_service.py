@@ -6,8 +6,8 @@ from utils.config import (
 
 
 def send_message(
-    chat_id: int,
-    text: str
+    text: str,    
+    chat_id: int
 ):
 
     url = (
@@ -20,6 +20,10 @@ def send_message(
         "chat_id": chat_id,
         "text": text
     }
+
+    print(
+        f"Sending Telegram message to {chat_id}"
+    )
 
     response = requests.post(
         url,

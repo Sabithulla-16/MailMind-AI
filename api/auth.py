@@ -184,13 +184,13 @@ def google_callback(
             try:
 
                 send_message(
-                    int(chat_id),
                     (
                         "✅ Gmail Connected!\n\n"
                         f"📧 {email_address}\n\n"
                         "You're all set. Type /help "
                         "to see what I can do."
-                    )
+                    ),
+                    int(chat_id),
                 )
 
                 telegram_sent = True
