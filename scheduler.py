@@ -69,40 +69,25 @@ scheduler.add_job(
 # 01,06,11,16,21...
 scheduler.add_job(
     EmailAnalyzerAgent().run,
-    "cron",
-    minute="1-59/5",
-    id="email_analyzer"
+    "interval",
+    minutes=5
 )
 
-# ==================================================
-# TASK EXTRACTION PIPELINE
-# ==================================================
-
-# 00,10,20,30,40,50
+# Extract tasks from analyzed emails
 scheduler.add_job(
     TaskAgent().run,
-    "cron",
-    minute="0,10,20,30,40,50",
-    id="task_agent"
+    "interval",
+    minutes=10
 )
 
-# ==================================================
-# CALENDAR EXTRACTION PIPELINE
-# ==================================================
-
-# 02,12,22,32,42,52
+# Extract calendar events
 scheduler.add_job(
     CalendarAgent().run,
-    "cron",
-    minute="2,12,22,32,42,52",
-    id="calendar_agent"
+    "interval",
+    minutes=10
 )
 
-# ==================================================
-# GOOGLE CALENDAR SYNC
-# ==================================================
-
-# 04,14,24,34,44,54
+# Sync extracted events to Google Calendar
 scheduler.add_job(
     CalendarSyncAgent().run,
     "cron",
