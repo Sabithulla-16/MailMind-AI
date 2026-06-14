@@ -1,8 +1,18 @@
-from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.blocking import (
+    BlockingScheduler
+)
 
-from agents.email_monitor import EmailMonitorAgent
-from agents.email_analyzer import EmailAnalyzerAgent
-from agents.telegram_report import TelegramReportAgent
+from agents.email_monitor import (
+    EmailMonitorAgent
+)
+
+from agents.email_analyzer import (
+    EmailAnalyzerAgent
+)
+
+from agents.telegram_report import (
+    TelegramReportAgent
+)
 
 from agents.calendar_reminder_agent import (
     CalendarReminderAgent
@@ -36,89 +46,142 @@ from agents.task_agent import (
     TaskAgent
 )
 
-scheduler = BlockingScheduler()
+scheduler = BlockingScheduler(
+    job_defaults={
+        "max_instances": 1,
+        "coalesce": True,
+        "misfire_grace_time": 300
+    }
+)
 
-# Check Gmail
+# ==================================================
+# EMAIL PIPELINE
+# ==================================================
+
+# 00,05,10,15,20...
 scheduler.add_job(
     EmailMonitorAgent().run,
-    "interval",
-    minutes=5
+    "cron",
+    minute="*/5",
+    id="email_monitor"
 )
 
-# Analyze new emails
+# 01,06,11,16,21...
 scheduler.add_job(
     EmailAnalyzerAgent().run,
-    "interval",
-    minutes=5
+    "cron",
+    minute="1-59/5",
+    id="email_analyzer"
 )
 
-# Extract tasks from analyzed emails
+# ==================================================
+# TASK EXTRACTION PIPELINE
+# ==================================================
+
+# 00,10,20,30,40,50
 scheduler.add_job(
     TaskAgent().run,
-    "interval",
-    minutes=10
+    "cron",
+    minute="0,10,20,30,40,50",
+    id="task_agent"
 )
 
-# Extract calendar events
+# ==================================================
+# CALENDAR EXTRACTION PIPELINE
+# ==================================================
+
+# 02,12,22,32,42,52
 scheduler.add_job(
     CalendarAgent().run,
-    "interval",
-    minutes=10
+    "cron",
+    minute="2,12,22,32,42,52",
+    id="calendar_agent"
 )
 
-# Sync extracted events to Google Calendar
+# ==================================================
+# GOOGLE CALENDAR SYNC
+# ==================================================
+
+# 04,14,24,34,44,54
 scheduler.add_job(
     CalendarSyncAgent().run,
-    "interval",
-    minutes=10
-)
-
-# Daily digest
-scheduler.add_job(
-    TelegramReportAgent().run,
     "cron",
-    hour=20,
-    minute=0
+    minute="4,14,24,34,44,54",
+    id="calendar_sync"
 )
 
-# Morning agenda
+# ==================================================
+# REMINDERS
+# ==================================================
+
+# Every 30 mins
+scheduler.add_job(
+    TaskReminderAgent().run,
+    "cron",
+    minute="0,30",
+    id="task_reminder"
+)
+
+# Offset by 5 mins
+scheduler.add_job(
+    CalendarReminderAgent().run,
+    "cron",
+    minute="5,35",
+    id="calendar_reminder"
+)
+
+# ==================================================
+# MORNING AGENDA
+# ==================================================
+
 scheduler.add_job(
     MorningAgendaAgent().run,
     "cron",
     hour=8,
-    minute=0
+    minute=0,
+    id="morning_agenda"
 )
 
-# Task reminders
+# ==================================================
+# DAILY TELEGRAM REPORT
+# ==================================================
+
 scheduler.add_job(
-    TaskReminderAgent().run,
+    TelegramReportAgent().run,
     "cron",
-    minute="*/30"
+    hour=20,
+    minute=0,
+    id="telegram_report"
 )
 
-# Calendar reminders
-scheduler.add_job(
-    CalendarReminderAgent().run,
-    "cron",
-    minute="*/30"
-)
+# ==================================================
+# WEEKLY REPORT
+# ==================================================
 
-# Weekly summary
 scheduler.add_job(
     WeeklyReportAgent().run,
     "cron",
     day_of_week="sun",
     hour=18,
-    minute=0
+    minute=0,
+    id="weekly_report"
 )
 
-# Cleanup old completed events/tasks
+# ==================================================
+# CLEANUP
+# ==================================================
+
 scheduler.add_job(
     EventCleanupAgent().run,
     "cron",
     hour=2,
-    minute=0
+    minute=0,
+    id="event_cleanup"
 )
+
+# ==================================================
+# STARTER
+# ==================================================
 
 def start_scheduler():
 
