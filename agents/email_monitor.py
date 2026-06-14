@@ -18,66 +18,74 @@ class EmailMonitorAgent:
 
     def run(self):
 
-        accounts = get_all_gmail_accounts()
+        try:
 
-        print(f"Found {len(accounts)} accounts")
+            accounts = get_all_gmail_accounts()
 
-        for account in accounts:
+            print(f"Found {len(accounts)} accounts")
 
-            print(
-                f"Checking {account['gmail_address']}"
-            )
-
-            try:
-
-                service = get_gmail_service(
-                    access_token=account["access_token"],
-                    refresh_token=account["refresh_token"]
-                )
-
-                messages = fetch_recent_emails(
-                    service._http.credentials,
-                    max_results=20
-                )
+            for account in accounts:
 
                 print(
-                    f"Found {len(messages)} emails"
+                    f"Checking {account['gmail_address']}"
                 )
 
-                for msg in messages:
+                try:
 
-                    full_message = get_email_details(
+                    service = get_gmail_service(
+                        access_token=account["access_token"],
+                        refresh_token=account["refresh_token"]
+                    )
+
+                    messages = fetch_recent_emails(
                         service._http.credentials,
-                        msg["id"]
+                        max_results=20
                     )
 
-                    parsed = parse_email(
-                        full_message
+                    print(
+                        f"Found {len(messages)} emails"
                     )
 
-                    parsed["user_id"] = (
-                        account["user_id"]
-                    )
+                    for msg in messages:
 
-                    parsed["gmail_account_id"] = (
-                        account["id"]
-                    )
-
-                    result = save_email(
-                        parsed
-                    )
-
-                    if result:
-                        print(
-                            f"Saved: {parsed['subject']}"
+                        full_message = get_email_details(
+                            service._http.credentials,
+                            msg["id"]
                         )
 
-                print(
-                    f"Synced {account['gmail_address']}"
-                )
+                        parsed = parse_email(
+                            full_message
+                        )
 
-            except Exception as e:
+                        parsed["user_id"] = (
+                            account["user_id"]
+                        )
 
-                print(
-                    f"Failed: {account['gmail_address']} -> {e}"
-                )
+                        parsed["gmail_account_id"] = (
+                            account["id"]
+                        )
+
+                        result = save_email(
+                            parsed
+                        )
+
+                        if result:
+                            print(
+                                f"Saved: {parsed['subject']}"
+                            )
+
+                    print(
+                        f"Synced {account['gmail_address']}"
+                    )
+
+                except Exception as e:
+
+                    print(
+                        f"Failed: {account['gmail_address']} -> {e}"
+                    )
+
+        except Exception as e:
+
+            print(
+                f"EmailMonitorAgent failed: {e}"
+            )

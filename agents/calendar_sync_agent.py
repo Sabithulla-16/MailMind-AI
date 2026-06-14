@@ -134,90 +134,98 @@ class CalendarSyncAgent:
 
     def run(self):
 
-        events = (
-            get_unsynced_events()
-        )
+        try:
 
-        print(
-            f"Found {len(events)} events"
-        )
+            events = (
+                get_unsynced_events()
+            )
 
-        for event in events:
+            print(
+                f"Found {len(events)} events"
+            )
 
-            try:
+            for event in events:
 
-                event_type = (
-                    event.get(
-                        "event_type"
-                    )
-                )
+                try:
 
-                event_time = (
-                    event.get(
-                        "event_time"
-                    )
-                )
-
-                if (
-                    event_type
-                    in [
-                        "DEADLINE",
-                        "BILL"
-                    ]
-                ):
-
-                    payload = (
-                        self.build_all_day_event(
-                            event["title"],
-                            event["event_date"]
+                    event_type = (
+                        event.get(
+                            "event_type"
                         )
                     )
 
-                elif event_time:
-
-                    payload = (
-                        self.build_timed_event(
-                            event["title"],
-                            event["event_date"],
-                            event_time
+                    event_time = (
+                        event.get(
+                            "event_time"
                         )
                     )
 
-                else:
+                    if (
+                        event_type
+                        in [
+                            "DEADLINE",
+                            "BILL"
+                        ]
+                    ):
 
-                    payload = (
-                        self.build_all_day_event(
-                            event["title"],
-                            event["event_date"]
+                        payload = (
+                            self.build_all_day_event(
+                                event["title"],
+                                event["event_date"]
+                            )
+                        )
+
+                    elif event_time:
+
+                        payload = (
+                            self.build_timed_event(
+                                event["title"],
+                                event["event_date"],
+                                event_time
+                            )
+                        )
+
+                    else:
+
+                        payload = (
+                            self.build_all_day_event(
+                                event["title"],
+                                event["event_date"]
+                            )
+                        )
+
+                    created = (
+                        self.create_event(
+                            event["gmail_account_id"],
+                            payload
                         )
                     )
 
-                created = (
-                    self.create_event(
-                        event["gmail_account_id"],
-                        payload
+                    if not created:
+
+                        continue
+
+                    mark_calendar_synced(
+                        event["id"],
+                        created["id"],
+                        created["htmlLink"]
                     )
-                )
 
-                if not created:
+                    print(
+                        f"Synced: "
+                        f"{event['title']}"
+                    )
 
-                    continue
+                except Exception as e:
 
-                mark_calendar_synced(
-                    event["id"],
-                    created["id"],
-                    created["htmlLink"]
-                )
+                    print(
+                        f"Failed to sync "
+                        f"{event['title']}: "
+                        f"{e}"
+                    )
 
-                print(
-                    f"Synced: "
-                    f"{event['title']}"
-                )
+        except Exception as e:  
 
-            except Exception as e:
-
-                print(
-                    f"Failed to sync "
-                    f"{event['title']}: "
-                    f"{e}"
-                )
+            print(
+                f"CalendarSyncAgent failed: {e}"
+            )

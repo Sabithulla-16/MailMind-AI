@@ -17,109 +17,117 @@ class TaskAgent:
 
     def run(self):
 
-        emails = (
-            get_unprocessed_task_emails()
-        )
+        try:
 
-        print(
-            f"Checking {len(emails)} emails"
-        )
+            emails = (
+                get_unprocessed_task_emails()
+            )
 
-        for email in emails:
+            print(
+                f"Checking {len(emails)} emails"
+            )
 
-            try:
+            for email in emails:
 
-                task = (
-                    extract_task(
-                        email
-                    )
-                )
+                try:
 
-                print("TASK RESULT:")
-                print(task)
-
-                if not task.get(
-                    "has_task"
-                ):
-                    continue
-
-                if task_exists(
-                    task["title"]
-                ):
-                    continue
-
-                due_date = task.get(
-                    "due_date"
-                )
-
-                if due_date in [
-                    "",
-                    None,
-                    "null"
-                ]:
-                    due_date = None
-
-                priority = (
-                    str(
-                        task.get(
-                            "priority",
-                            "MEDIUM"
+                    task = (
+                        extract_task(
+                            email
                         )
                     )
-                    .upper()
-                )
 
-                if priority not in [
-                    "LOW",
-                    "MEDIUM",
-                    "HIGH"
-                ]:
-                    priority = "MEDIUM"
+                    print("TASK RESULT:")
+                    print(task)
 
-                save_task(
-                    {
-                        "email_id":
-                            email["id"],
+                    if not task.get(
+                        "has_task"
+                    ):
+                        continue
 
-                        "gmail_account_id":
-                            email["gmail_account_id"],
+                    if task_exists(
+                        task["title"]
+                    ):
+                        continue
 
-                        "task_type":
-                            task[
-                                "task_type"
-                            ],
+                    due_date = task.get(
+                        "due_date"
+                    )
 
-                        "title":
-                            task[
-                                "title"
-                            ],
+                    if due_date in [
+                        "",
+                        None,
+                        "null"
+                    ]:
+                        due_date = None
 
-                        "description":
-                            task[
-                                "description"
-                            ],
+                    priority = (
+                        str(
+                            task.get(
+                                "priority",
+                                "MEDIUM"
+                            )
+                        )
+                        .upper()
+                    )
 
-                        "due_date":
-                            due_date,
+                    if priority not in [
+                        "LOW",
+                        "MEDIUM",
+                        "HIGH"
+                    ]:
+                        priority = "MEDIUM"
 
-                        "priority":
-                            priority
-                    }
-                )
+                    save_task(
+                        {
+                            "email_id":
+                                email["id"],
 
-                print(
-                    f"Task: "
-                    f"{task['title']}"
-                )
+                            "gmail_account_id":
+                                email["gmail_account_id"],
 
-            except Exception as e:
+                            "task_type":
+                                task[
+                                    "task_type"
+                                ],
 
-                print(
-                    f"Failed: {e}"
-                )
+                            "title":
+                                task[
+                                    "title"
+                                ],
 
-            finally:
+                            "description":
+                                task[
+                                    "description"
+                                ],
 
-                mark_task_processed(
-                    email["gmail_message_id"]
-                )
+                            "due_date":
+                                due_date,
+
+                            "priority":
+                                priority
+                        }
+                    )
+
+                    print(
+                        f"Task: "
+                        f"{task['title']}"
+                    )
+
+                except Exception as e:
+
+                    print(
+                        f"Failed: {e}"
+                    )
+
+                finally:
+
+                    mark_task_processed(
+                        email["gmail_message_id"]
+                    )
+
+        except Exception as e:
+
+            print(
+                f"TaskAgent failed: {e}"
+            )

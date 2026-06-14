@@ -1,5 +1,15 @@
 import json
 
+from repositories.task_repo import (
+    get_pending_tasks_by_account,
+    complete_task,
+    delete_task
+)
+
+from agents.task_sync_agent import (
+    TaskSyncAgent
+)
+
 from repositories.search_repo import (
     search_emails_by_account,
     get_by_category_and_account,
@@ -978,7 +988,11 @@ class TelegramCommandAgent:
                 )
 
             output.append(
-                "\n💡 Mark done: /done 1"
+                "\n💡 Complete: /done 1"
+            )
+
+            output.append(
+                "🗑 Delete: /deletetask 1"
             )
 
             return "\n".join(output)
@@ -1014,6 +1028,18 @@ class TelegramCommandAgent:
                     task["id"]
                 )
 
+                try:
+
+                    TaskSyncAgent().complete_google_task(
+                        task["id"]
+                    )
+
+                except Exception as e:
+
+                    print(
+                        f"Google task complete failed: {e}"
+                    )
+
                 return (
                     f"✅ Completed:\n"
                     f"{task['title']}"
@@ -1024,6 +1050,63 @@ class TelegramCommandAgent:
                 return (
                     "❌ Could not complete task.\n\n"
                     "Usage: /done 1"
+                )
+
+        if text.startswith(
+            "/deletetask "
+        ):
+
+            try:
+
+                index = int(
+                    text.replace(
+                        "/deletetask ",
+                        ""
+                    )
+                )
+
+                active_account_id = (
+                    self._get_active_account_id(
+                        chat_id
+                    )
+                )
+
+                tasks = (
+                    get_pending_tasks_by_account(
+                        active_account_id
+                    )
+                )
+
+                task = (
+                    tasks[index - 1]
+                )
+
+                try:
+
+                    TaskSyncAgent().delete_google_task(
+                        task["id"]
+                    )
+
+                except Exception as e:
+
+                    print(
+                        f"Google task delete failed: {e}"
+                    )
+
+                delete_task(
+                    task["id"]
+                )
+
+                return (
+                    f"🗑 Deleted:\n"
+                    f"{task['title']}"
+                )
+
+            except Exception:
+
+                return (
+                    "❌ Could not delete task.\n\n"
+                    "Usage: /deletetask 1"
                 )
 
         if text == "/urgent":

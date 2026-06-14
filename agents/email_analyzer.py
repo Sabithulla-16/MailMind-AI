@@ -24,106 +24,114 @@ class EmailAnalyzerAgent:
 
     def run(self):
 
-        emails = (
-            get_unprocessed_emails()
-        )
+        try:
 
-        print(
-            f"Found {len(emails)} emails"
-        )
+            emails = (
+                get_unprocessed_emails()
+            )
 
-        for email in emails:
+            print(
+                f"Found {len(emails)} emails"
+            )
 
-            try:
+            for email in emails:
 
-                result = analyze_email(email)
+                try:
 
-                if not result:
+                    result = analyze_email(email)
 
-                    print(
-                        f"Skipped: {email['subject']}"
+                    if not result:
+
+                        print(
+                            f"Skipped: {email['subject']}"
+                        )
+
+                        continue
+
+                    safe_subject = (
+                        email["subject"]
+                        .encode("ascii", errors="ignore")
+                        .decode()
                     )
 
-                    continue
+                    print(
+                        f"[{result.get('category')}] "
+                        f"{safe_subject}"
+                    )
 
-                safe_subject = (
-                    email["subject"]
-                    .encode("ascii", errors="ignore")
-                    .decode()
-                )
+                    print("AI RESULT:")
+                    print(result)
 
-                print(
-                    f"[{result.get('category')}] "
-                    f"{safe_subject}"
-                )
+                    save_analysis(
+                        {
+                            "gmail_message_id":
+                                email[
+                                    "gmail_message_id"
+                                ],
 
-                print("AI RESULT:")
-                print(result)
+                            "user_id": email["user_id"],
 
-                save_analysis(
-                    {
-                        "gmail_message_id":
-                            email[
-                                "gmail_message_id"
-                            ],
+                            "gmail_account_id": email["gmail_account_id"],
 
-                        "user_id": email["user_id"],
+                            "category": result.get(
+                                "category",
+                                "UNKNOWN"
+                            ),
 
-                        "gmail_account_id": email["gmail_account_id"],
+                            "priority": result.get(
+                                "priority",
+                                "LOW"
+                            ),
 
-                        "category": result.get(
-                            "category",
-                            "UNKNOWN"
-                        ),
+                            "summary": result.get(
+                                "short_summary",
+                                ""
+                            ),
 
-                        "priority": result.get(
-                            "priority",
-                            "LOW"
-                        ),
+                            "short_summary": result.get(
+                                "short_summary",
+                                ""
+                            ),
 
-                        "summary": result.get(
-                            "short_summary",
-                            ""
-                        ),
+                            "detailed_summary": result.get(
+                                "detailed_summary",
+                                ""
+                            ),
 
-                        "short_summary": result.get(
-                            "short_summary",
-                            ""
-                        ),
+                            "confidence": result.get(
+                                "confidence",
+                                0
+                            ),
 
-                        "detailed_summary": result.get(
-                            "detailed_summary",
-                            ""
-                        ),
+                            "action_required": result.get(
+                                "action_required",
+                                False
+                            )
+                        }
+                    )
 
-                        "confidence": result.get(
-                            "confidence",
-                            0
-                        ),
+                    mark_processed(
+                        email[
+                            "gmail_message_id"
+                        ]
+                    )
 
-                        "action_required": result.get(
-                            "action_required",
-                            False
-                        )
-                    }
-                )
+                except Exception as e:
 
-                mark_processed(
-                    email[
-                        "gmail_message_id"
-                    ]
-                )
+                    safe_subject = (
+                        str(email.get("subject", ""))
+                        .encode("ascii", errors="ignore")
+                        .decode()
+                    )
 
-            except Exception as e:
+                    print(f"\nFAILED EMAIL: {safe_subject}")
 
-                safe_subject = (
-                    str(email.get("subject", ""))
-                    .encode("ascii", errors="ignore")
-                    .decode()
-                )
+                    print(f"ERROR: {e}")
 
-                print(f"\nFAILED EMAIL: {safe_subject}")
+                    traceback.print_exc()
 
-                print(f"ERROR: {e}")
+        except Exception as e:
 
-                traceback.print_exc()
+            print(
+                f"EmailAnalyzerAgent failed: {e}"
+            )

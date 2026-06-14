@@ -23,66 +23,74 @@ class MorningAgendaAgent:
 
     def run(self):
 
-        accounts = (
-            get_all_gmail_accounts()
-        )
+        try:
 
-        for account in accounts:
-
-            user = (
-                get_user_by_id(
-                    account["user_id"]
-                )
+            accounts = (
+                get_all_gmail_accounts()
             )
 
-            if not user:
-                continue
+            for account in accounts:
 
-            events = (
-                get_today_events_by_account(
-                    account["id"]
-                )
-            )
-
-            tasks = (
-                get_high_priority_tasks_by_account(
-                    account["id"]
-                )
-            )
-
-            if not events and not tasks:
-                continue
-
-            output = [
-                f"🌅 Good Morning\n"
-                f"📧 {account['gmail_address']}\n"
-            ]
-
-            if events:
-
-                output.append(
-                    "📅 Today's Events"
+                user = (
+                    get_user_by_id(
+                        account["user_id"]
+                    )
                 )
 
-                for event in events:
+                if not user:
+                    continue
+
+                events = (
+                    get_today_events_by_account(
+                        account["id"]
+                    )
+                )
+
+                tasks = (
+                    get_high_priority_tasks_by_account(
+                        account["id"]
+                    )
+                )
+
+                if not events and not tasks:
+                    continue
+
+                output = [
+                    f"🌅 Good Morning\n"
+                    f"📧 {account['gmail_address']}\n"
+                ]
+
+                if events:
 
                     output.append(
-                        f"• {event['title']}"
+                        "📅 Today's Events"
                     )
 
-            if tasks:
+                    for event in events:
 
-                output.append(
-                    "\n🚨 High Priority Tasks"
-                )
+                        output.append(
+                            f"• {event['title']}"
+                        )
 
-                for task in tasks:
+                if tasks:
 
                     output.append(
-                        f"• {task['title']}"
+                        "\n🚨 High Priority Tasks"
                     )
 
-            send_message(
-                "\n".join(output),
-                user["telegram_chat_id"]
+                    for task in tasks:
+
+                        output.append(
+                            f"• {task['title']}"
+                        )
+
+                send_message(
+                    "\n".join(output),
+                    user["telegram_chat_id"]
+                )
+
+        except Exception as e:
+
+            print(
+                f"MorningAgendaAgent failed: {e}"
             )

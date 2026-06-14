@@ -133,103 +133,119 @@ class CalendarAgent:
 
     def run(self):
 
-        emails = (
-            get_unprocessed_calendar_emails()
-        )
+        try:
 
-        print(
-            f"Checking {len(emails)} emails"
-        )
+            emails = (
+                get_unprocessed_calendar_emails()
+            )
 
-        for email in emails:
+            print(
+                f"Checking {len(emails)} emails"
+            )
 
-            try:
+            for email in emails:
 
-                result = (
-                    extract_event(email)
-                )
+                try:
 
-                print("EVENT RESULT:")
-                print(result)
-
-                if not result.get(
-                    "has_event"
-                ):
-                    continue
-
-                if event_exists(
-                    result["title"]
-                ):
-                    continue
-
-                if (
-                    not result.get(
-                        "event_date"
+                    result = (
+                        extract_event(email)
                     )
-                ):
+
+                    print("EVENT RESULT:")
+                    print(result)
+
+                    if not result.get(
+                        "has_event"
+                    ):
+                        continue
+
+                    if event_exists(
+                        result["title"]
+                    ):
+                        continue
+
+                    if (
+                        not result.get(
+                            "event_date"
+                        )
+                    ):
+                        print(
+                            "Skipping event with no date"
+                        )
+                        continue
+
+                    if (
+                        result.get(
+                            "confidence",
+                            0
+                        ) < 0.8
+                    ):
+                        continue
+
+                    save_event(
+                        {
+                            "email_id":
+                                email["id"],
+
+                            "gmail_account_id":
+                                email["gmail_account_id"],
+
+                            "event_type":
+                                result[
+                                    "event_type"
+                                ],
+
+                            "title":
+                                result[
+                                    "title"
+                                ],
+
+                            "event_date":
+                                result[
+                                    "event_date"
+                                ],
+
+                            "event_time":
+                                result[
+                                    "event_time"
+                                ],
+
+                            "confidence":
+                                result[
+                                    "confidence"
+                                ]
+                        }
+                    )
+
                     print(
-                        "Skipping event with no date"
+                        f"Event: "
+                        f"{result['title']}"
                     )
-                    continue
 
-                if (
-                    result.get(
-                        "confidence",
-                        0
-                    ) < 0.8
-                ):
-                    continue
+                except Exception as e:
 
-                print(result)
+                    print(
+                        f"Email failed: {e}"
+                    )
 
-                save_event(
-                    {
-                        "email_id":
-                            email["id"],
+                finally:
 
-                        "gmail_account_id":
-                            email["gmail_account_id"],
+                    try:
 
-                        "event_type":
-                            result[
-                                "event_type"
-                            ],
-
-                        "title":
-                            result[
-                                "title"
-                            ],
-
-                        "event_date":
-                            result[
-                                "event_date"
-                            ],
-
-                        "event_time":
-                            result[
-                                "event_time"
-                            ],
-
-                        "confidence":
-                            result[
-                                "confidence"
+                        mark_calendar_processed(
+                            email[
+                                "gmail_message_id"
                             ]
-                    }
-                )
+                        )
 
-                print(
-                    f"Event: "
-                    f"{result['title']}"
-                )
+                    except Exception as e:
 
-            except Exception as e:
+                        print(
+                            f"Mark processed failed: {e}"
+                        )
 
-                print(
-                    f"Failed: {e}"
-                )
+        except Exception as e:
 
-            finally:
-
-                mark_calendar_processed(
-                    email["gmail_message_id"]
-                )
+            print(
+                f"CalendarAgent failed: {e}"
+            )

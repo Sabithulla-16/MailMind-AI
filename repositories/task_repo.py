@@ -160,3 +160,80 @@ def get_high_priority_tasks_by_account(
     )
 
     return result.data
+
+def get_unsynced_tasks():
+
+    result = (
+        supabase
+        .table("tasks")
+        .select("*")
+        .eq(
+            "task_synced",
+            False
+        )
+        .execute()
+    )
+
+    return result.data
+
+def mark_task_synced(
+    task_id,
+    google_task_id,
+    link
+):
+
+    return (
+        supabase
+        .table("tasks")
+        .update(
+            {
+                "task_synced": True,
+                "google_task_id":
+                    google_task_id,
+                "google_task_link":
+                    link
+            }
+        )
+        .eq(
+            "id",
+            task_id
+        )
+        .execute()
+    )
+
+def get_task_by_id(
+    task_id
+):
+
+    result = (
+        supabase
+        .table("tasks")
+        .select("*")
+        .eq(
+            "id",
+            task_id
+        )
+        .limit(1)
+        .execute()
+    )
+
+    if not result.data:
+        return None
+
+    return result.data[0]
+
+
+def delete_task(
+    task_id
+):
+
+    return (
+        supabase
+        .table("tasks")
+        .delete()
+        .eq(
+            "id",
+            task_id
+        )
+        .execute()
+    )

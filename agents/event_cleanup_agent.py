@@ -7,12 +7,20 @@ class EventCleanupAgent:
 
     def run(self):
 
-        deleted = (
-            delete_past_events()
-        )
+        try:
 
-        print(
-            f"Deleted "
-            f"{deleted} "
-            f"past events"
-        )
+            deleted = (
+                delete_past_events()
+            )
+
+            print(
+                f"Deleted "
+                f"{deleted} "
+                f"past events"
+            )
+
+        except Exception as e:
+
+            print(
+                f"EventCleanupAgent failed: {e}"
+            )

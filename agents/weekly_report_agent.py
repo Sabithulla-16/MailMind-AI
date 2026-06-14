@@ -19,30 +19,38 @@ class WeeklyReportAgent:
 
     def run(self):
 
-        accounts = (
-            get_all_gmail_accounts()
-        )
+        try:
 
-        for account in accounts:
-
-            user = (
-                get_user_by_id(
-                    account["user_id"]
-                )
+            accounts = (
+                get_all_gmail_accounts()
             )
 
-            if not user:
-                continue
+            for account in accounts:
 
-            report = (
-                generate_weekly_report(
-                    account["id"]
+                user = (
+                    get_user_by_id(
+                        account["user_id"]
+                    )
                 )
-            )
 
-            send_message(
-                report,
-                user[
-                    "telegram_chat_id"
-                ]
+                if not user:
+                    continue
+
+                report = (
+                    generate_weekly_report(
+                        account["id"]
+                    )
+                )
+
+                send_message(
+                    report,
+                    user[
+                        "telegram_chat_id"
+                    ]
+                )
+
+        except Exception as e:
+
+            print(
+                f"WeeklyReportAgent failed: {e}"
             )

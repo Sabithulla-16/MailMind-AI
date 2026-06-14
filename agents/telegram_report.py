@@ -32,60 +32,68 @@ class TelegramReportAgent:
 
     def run(self):
 
-        accounts = (
-            get_all_gmail_accounts()
-        )
+        try:
 
-        for account in accounts:
-
-            user = get_user_by_id(
-                account["user_id"]
+            accounts = (
+                get_all_gmail_accounts()
             )
 
-            if not user:
-                continue
+            for account in accounts:
 
-            rows = get_today_analysis_by_account(
-                account["id"]
-            )
-
-            if not rows:
-
-                print(
-                    "No analysis found."
+                user = get_user_by_id(
+                    account["user_id"]
                 )
 
-                continue
+                if not user:
+                    continue
 
-            ai_summary = generate_digest(
-                rows
-            )
+                rows = get_today_analysis_by_account(
+                    account["id"]
+                )
 
-            print("AI SUMMARY:")
-            print(ai_summary)
+                if not rows:
 
-            save_digest(
-                account["id"],
-                ai_summary,
-                len(rows)
-            )
+                    print(
+                        "No analysis found."
+                    )
 
-            report = build_digest(
-                rows,
-                ai_summary
-            )
+                    continue
 
-            send_message(
-                report,
-                user["telegram_chat_id"]
-            )
+                ai_summary = generate_digest(
+                    rows
+                )
 
-            save_report(
-                account["id"],
-                report,
-                len(rows)
-            )
+                print("AI SUMMARY:")
+                print(ai_summary)
+
+                save_digest(
+                    account["id"],
+                    ai_summary,
+                    len(rows)
+                )
+
+                report = build_digest(
+                    rows,
+                    ai_summary
+                )
+
+                send_message(
+                    report,
+                    user["telegram_chat_id"]
+                )
+
+                save_report(
+                    account["id"],
+                    report,
+                    len(rows)
+                )
+
+                print(
+                    f"Telegram report sent for {account['gmail_address']}"
+                )
+
+        except Exception as e:
 
             print(
-                f"Telegram report sent for {account['gmail_address']}"
+                f"TelegramReportAgent failed: {e}"
             )
