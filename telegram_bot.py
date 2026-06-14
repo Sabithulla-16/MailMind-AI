@@ -55,7 +55,7 @@ async def handle_message(
             keyboard = [
                 [
                     InlineKeyboardButton(
-                        "🔗 Connect Gmail",
+                        "⟡ Connect Gmail",
                         url=url
                     )
                 ]
@@ -68,7 +68,7 @@ async def handle_message(
             )
 
             await update.message.reply_text(
-                "👋 Welcome to MailMind AI\n\n"
+                "✦ Welcome to MailMind AI\n\n"
                 "Connect your Gmail account:",
                 reply_markup=reply_markup
             )
