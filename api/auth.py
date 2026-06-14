@@ -111,6 +111,12 @@ def google_callback(
             )
         )
 
+        email_address = (
+            profile["emailAddress"]
+        )
+
+        # ── Resolve or create user ───────────────
+
         user = None
 
         if chat_id:
@@ -125,9 +131,7 @@ def google_callback(
 
             user = (
                 get_user_by_email(
-                    profile[
-                        "emailAddress"
-                    ]
+                    email_address
                 )
             )
 
@@ -135,25 +139,27 @@ def google_callback(
 
             user = (
                 create_user(
-                    profile[
-                        "emailAddress"
-                    ]
+                    email_address
                 )
             )
 
-            if chat_id:
+        # Always persist chat_id — whether the user
+        # is new or already existed without one.
+        if chat_id and not user.get(
+            "telegram_chat_id"
+        ):
 
-                set_telegram_chat_id(
-                    user["id"],
-                    int(chat_id)
-                )
+            set_telegram_chat_id(
+                user["id"],
+                int(chat_id)
+            )
+
+        # ── Save Gmail account ───────────────────
 
         gmail_account = (
             save_gmail_account(
                 user_id=user["id"],
-                gmail_address=profile[
-                    "emailAddress"
-                ],
+                gmail_address=email_address,
                 access_token=credentials.token,
                 refresh_token=credentials.refresh_token
             )
@@ -168,6 +174,11 @@ def google_callback(
                 gmail_account["id"]
             )
 
+        # ── Notify Telegram ──────────────────────
+
+        telegram_sent = False
+        telegram_error = None
+
         if chat_id:
 
             try:
@@ -175,56 +186,93 @@ def google_callback(
                 send_message(
                     int(chat_id),
                     (
-                        "✅ Gmail Connected Successfully\n\n"
-                        f"📧 {profile['emailAddress']}\n\n"
-                        "You may now start using MailMind AI!"
+                        "✅ Gmail Connected!\n\n"
+                        f"📧 {email_address}\n\n"
+                        "You're all set. Type /help "
+                        "to see what I can do."
                     )
                 )
 
+                telegram_sent = True
+
             except Exception as e:
 
+                telegram_error = str(e)
+
                 print(
-                    f"Telegram notify failed: {e}"
+                    f"[auth] Telegram notify "
+                    f"failed for chat_id={chat_id}: "
+                    f"{telegram_error}"
                 )
+
+        # ── Clean up flow store ──────────────────
 
         flow_store.pop(
             state,
             None
         )
 
+        # ── Success page ─────────────────────────
+
+        telegram_note = (
+            "<p>A confirmation has been sent to Telegram.</p>"
+            if telegram_sent else
+            "<p style='color:#888;font-size:13px'>"
+            "Could not send Telegram notification — "
+            "but your account is connected. "
+            "Return to Telegram and type /help.</p>"
+        )
+
         return HTMLResponse(
-            """
+            f"""
             <html>
             <head>
                 <title>MailMind AI</title>
+                <meta name="viewport"
+                    content="width=device-width,
+                    initial-scale=1">
+                <style>
+                    body {{
+                        font-family: -apple-system,
+                            Arial, sans-serif;
+                        text-align: center;
+                        padding: 80px 24px;
+                        background: #f8fafc;
+                        color: #1a1a2e;
+                    }}
+                    .card {{
+                        max-width: 400px;
+                        margin: 0 auto;
+                        background: white;
+                        border-radius: 16px;
+                        padding: 40px 32px;
+                        box-shadow: 0 4px 24px
+                            rgba(0,0,0,0.08);
+                    }}
+                    h1 {{
+                        font-size: 22px;
+                        margin-bottom: 12px;
+                    }}
+                    p {{
+                        color: #555;
+                        line-height: 1.6;
+                        margin: 8px 0;
+                    }}
+                    .email {{
+                        font-weight: 600;
+                        color: #1a1a2e;
+                    }}
+                </style>
             </head>
-
-            <body style="
-                font-family: Arial;
-                text-align: center;
-                padding-top: 100px;
-                background-color: #f8fafc;
-            ">
-
-                <h1>
-                    ✅ Gmail Connected Successfully
-                </h1>
-
-                <p>
-                    Your Gmail account has been
-                    linked to MailMind AI.
-                </p>
-
-                <p>
-                    A confirmation message has
-                    been sent to Telegram.
-                </p>
-
-                <p>
-                    You may now close this tab
-                    and return to Telegram.
-                </p>
-
+            <body>
+                <div class="card">
+                    <h1>✅ Gmail Connected!</h1>
+                    <p class="email">{email_address}</p>
+                    <br>
+                    {telegram_note}
+                    <p>You may now close this tab
+                    and return to Telegram.</p>
+                </div>
             </body>
             </html>
             """
@@ -232,7 +280,20 @@ def google_callback(
 
     except Exception as e:
 
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        print(f"[auth] google_callback error: {e}")
+
+        return HTMLResponse(
+            f"""
+            <html>
+            <head><title>MailMind AI — Error</title></head>
+            <body style="font-family:Arial;
+                text-align:center;padding:80px 24px;">
+                <h1>❌ Something went wrong</h1>
+                <p>{str(e)}</p>
+                <p>Please go back to Telegram
+                and try /start again.</p>
+            </body>
+            </html>
+            """,
+            status_code=500
+        )
