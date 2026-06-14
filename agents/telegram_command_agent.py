@@ -104,47 +104,47 @@ from repositories.digest_repo import (
 
 
 HELP_MENU = (
-    "📬 MailMind AI — Command Reference\n"
+    "✦ MailMind AI — Command Reference\n"
     "━━━━━━━━━━━━━━━━━━━━━━\n\n"
 
-    "👤 Accounts\n"
+    "⬡ Accounts\n"
     "/accounts — List connected Gmail accounts\n"
     "/use email@gmail.com — Switch active account\n\n"
 
-    "📊 Reports\n"
+    "◈ Reports\n"
     "/today — Daily AI summary report\n"
     "/digest — AI digest grouped by category\n"
     "/stats — Email volume & category breakdown\n\n"
 
-    "📩 Emails\n"
+    "◉ Emails\n"
     "/latest — Most recent email\n"
     "/recent — Last 10 emails\n"
     "/important — High-priority emails\n"
     "/action — Emails needing your attention\n"
     "/search keyword — Full-text inbox search\n\n"
 
-    "🤖 AI Assistant\n"
+    "◆ AI Assistant\n"
     "/ask question — Ask anything about your emails\n\n"
 
-    "📂 Categories\n"
+    "▸ Categories\n"
     "/ainews — AI & tech newsletters\n"
     "/finance — Billing & financial emails\n"
     "/account — Account notifications\n"
     "/security — Security & login alerts\n\n"
 
-    "📅 Calendar\n"
+    "◷ Calendar\n"
     "/events — Upcoming events\n"
     "/todayevents — Today's schedule\n"
     "/deleteevent 1 — Remove event by number\n"
     "/completeevent 1 — Mark event as done\n"
     "/rescheduleevent 1 2026-06-25 — Reschedule event\n\n"
 
-    "📋 Tasks\n"
+    "◎ Tasks\n"
     "/tasks — All pending tasks\n"
     "/urgent — High-priority tasks only\n"
     "/done 1 — Complete task by number\n\n"
 
-    "✉️ Draft & Reply\n"
+    "⟡ Draft & Reply\n"
     "/recent — Pick an email to reply to\n"
     "/draft 1 — Start drafting reply\n"
     "/accept — Draft an acceptance reply\n"
@@ -194,11 +194,11 @@ class TelegramCommandAgent:
         if not events:
 
             return (
-                "📅 No upcoming events."
+                "— No upcoming events."
             )
 
         output = [
-            "📅 Upcoming Events\n"
+            "🗓 Upcoming Events\n"
         ]
 
         for event in events:
@@ -265,13 +265,13 @@ class TelegramCommandAgent:
                     )
 
                     return (
-                        "👋 Welcome back to MailMind AI!\n\n"
-                        f"✅ Connected as: {email}\n\n"
+                        "✦ Welcome back to MailMind AI!\n\n"
+                        f"● Connected as: {email}\n\n"
                         "Type /help to see all commands."
                     )
 
             return (
-                "👋 Welcome to MailMind AI!\n\n"
+                "✦ Welcome to MailMind AI!\n\n"
                 "I'm your intelligent email assistant. "
                 "I can summarise your inbox, draft replies, "
                 "manage your calendar & tasks, and answer "
@@ -329,7 +329,7 @@ class TelegramCommandAgent:
                 return "No AI news."
 
             output = [
-                "🤖 AI News\n"
+                "◆ AI News\n"
             ]
 
             for email in emails:
@@ -359,7 +359,7 @@ class TelegramCommandAgent:
                 return "No finance emails."
 
             output = [
-                "💰 Finance Updates\n"
+                "◈ Finance Updates\n"
             ]
 
             for email in emails:
@@ -389,7 +389,7 @@ class TelegramCommandAgent:
                 return "No account updates."
 
             output = [
-                "👤 Account Updates\n"
+                "◉ Account Updates\n"
             ]
 
             for email in emails:
@@ -418,7 +418,7 @@ class TelegramCommandAgent:
                 return "No security alerts."
 
             output = [
-                "🔐 Security Alerts\n"
+                "⚑ Security Alerts\n"
             ]
 
             for email in emails:
@@ -476,7 +476,7 @@ class TelegramCommandAgent:
                 return "No pending actions."
 
             output = [
-                "⚠️ Action Required\n"
+                "⚡ Action Required\n"
             ]
 
             for email in emails:
@@ -506,7 +506,7 @@ class TelegramCommandAgent:
                 return "No emails found."
 
             return (
-                "📩 Latest Email\n\n"
+                "◉ Latest Email\n\n"
                 f"Category: {email.get('category')}\n"
                 f"Priority: {email.get('priority')}\n\n"
                 f"{email.get('short_summary')}"
@@ -533,7 +533,7 @@ class TelegramCommandAgent:
                 )
 
             output = [
-                "📩 Recent Emails\n"
+                "◉ Recent Emails\n"
             ]
 
             for i, email in enumerate(
@@ -578,7 +578,7 @@ class TelegramCommandAgent:
                 return "Invalid digest format."
 
             message = (
-                "🧠 Latest AI Digest\n\n"
+                "✦ Latest AI Digest\n\n"
                 + digest_data.get(
                     "header",
                     ""
@@ -593,7 +593,7 @@ class TelegramCommandAgent:
             ):
 
                 message += (
-                    f"\n\n📂 {category}"
+                    f"\n\n▸ {category}"
                 )
 
                 for item in items:
@@ -607,7 +607,7 @@ class TelegramCommandAgent:
             ):
 
                 message += (
-                    "\n\n⚠️ Action Required"
+                    "\n\n⚡ Action Required"
                 )
 
                 for item in digest_data[
@@ -648,7 +648,7 @@ class TelegramCommandAgent:
                 )
 
             output = [
-                "📊 Email Statistics\n"
+                "◈ Email Statistics\n"
             ]
 
             total = len(rows)
@@ -725,7 +725,7 @@ class TelegramCommandAgent:
                 )
 
             output = [
-                f"🔎 Search: {keyword}\n"
+                f"⌕ Search: {keyword}\n"
             ]
 
             for email in emails:
@@ -756,11 +756,11 @@ class TelegramCommandAgent:
             if not events:
 
                 return (
-                    "📅 No upcoming events."
+                    "— No upcoming events."
                 )
 
             output = [
-                "📅 Upcoming Events\n"
+                "🗓 Upcoming Events\n"
             ]
 
             for i, event in enumerate(
@@ -771,11 +771,11 @@ class TelegramCommandAgent:
                 output.append(
                     f"{i}. "
                     f"{event['title']}\n"
-                    f"📅 {event['event_date']}"
+                    f"◷ {event['event_date']}"
                 )
 
             output.append(
-                "\n💡 Actions:\n"
+                "\n› Actions:\n"
                 "/deleteevent 1\n"
                 "/rescheduleevent 1 2026-06-25\n"
                 "/completeevent 1"
@@ -816,14 +816,14 @@ class TelegramCommandAgent:
                 )
 
                 return (
-                    f"🗑 Deleted:\n"
+                    f"⊘ Deleted:\n"
                     f"{event['title']}"
                 )
 
             except Exception as e:
 
                 return (
-                    f"❌ Could not delete event.\n\n"
+                    f"✗ Could not delete event.\n\n"
                     f"Usage: /deleteevent 1\n\n"
                     f"{e}"
                 )
@@ -857,14 +857,14 @@ class TelegramCommandAgent:
                 )
 
                 return (
-                    f"✅ Completed:\n"
+                    f"✓ Completed:\n"
                     f"{event['title']}"
                 )
 
             except Exception:
 
                 return (
-                    "❌ Could not complete event.\n\n"
+                    "✗ Could not complete event.\n\n"
                     "Usage: /completeevent 1"
                 )
 
@@ -911,7 +911,7 @@ class TelegramCommandAgent:
                 )
 
                 return (
-                    f"📅 Rescheduled:\n"
+                    f"◷ Rescheduled:\n"
                     f"{event['title']}\n"
                     f"→ {new_date}"
                 )
@@ -919,7 +919,7 @@ class TelegramCommandAgent:
             except Exception:
 
                 return (
-                    "❌ Could not reschedule event.\n\n"
+                    "✗ Could not reschedule event.\n\n"
                     "Usage: /rescheduleevent 1 2026-06-25"
                 )
 
@@ -938,11 +938,11 @@ class TelegramCommandAgent:
             if not events:
 
                 return (
-                    "📅 No events today."
+                    "— No events today."
                 )
 
             output = [
-                "📅 Today's Events\n"
+                "🗓 Today's Events\n"
             ]
 
             for event in events:
@@ -971,10 +971,10 @@ class TelegramCommandAgent:
             )
 
             if not tasks:
-                return "✅ No pending tasks."
+                return "— No pending tasks."
 
             output = [
-                "📋 Pending Tasks\n"
+                "◎ Pending Tasks\n"
             ]
 
             for i, task in enumerate(
@@ -988,11 +988,11 @@ class TelegramCommandAgent:
                 )
 
             output.append(
-                "\n💡 Complete: /done 1"
+                "\n› Complete: /done 1"
             )
 
             output.append(
-                "🗑 Delete: /deletetask 1"
+                "⊘ Delete: /deletetask 1"
             )
 
             return "\n".join(output)
@@ -1041,14 +1041,14 @@ class TelegramCommandAgent:
                     )
 
                 return (
-                    f"✅ Completed:\n"
+                    f"✓ Completed:\n"
                     f"{task['title']}"
                 )
 
             except Exception:
 
                 return (
-                    "❌ Could not complete task.\n\n"
+                    "✗ Could not complete task.\n\n"
                     "Usage: /done 1"
                 )
 
@@ -1098,14 +1098,14 @@ class TelegramCommandAgent:
                 )
 
                 return (
-                    f"🗑 Deleted:\n"
+                    f"⊘ Deleted:\n"
                     f"{task['title']}"
                 )
 
             except Exception:
 
                 return (
-                    "❌ Could not delete task.\n\n"
+                    "✗ Could not delete task.\n\n"
                     "Usage: /deletetask 1"
                 )
 
@@ -1124,11 +1124,11 @@ class TelegramCommandAgent:
             if not tasks:
 
                 return (
-                    "✅ No high priority tasks."
+                    "— No high priority tasks."
                 )
 
             output = [
-                "🚨 High Priority Tasks\n"
+                "⚡ High Priority Tasks\n"
             ]
 
             for i, task in enumerate(
@@ -1146,7 +1146,7 @@ class TelegramCommandAgent:
                 output.append(
                     f"{i}. "
                     f"{task['title']}\n"
-                    f"📅 {due_date}"
+                    f"◷ {due_date}"
                 )
 
             return (
@@ -1169,7 +1169,7 @@ class TelegramCommandAgent:
             except ValueError:
 
                 return (
-                    "❌ Invalid number.\n\n"
+                    "✗ Invalid number.\n\n"
                     "Usage: /draft 1"
                 )
 
@@ -1198,7 +1198,7 @@ class TelegramCommandAgent:
             if not session:
 
                 return (
-                    "⚠️ No draft selected.\n\n"
+                    "◦ No draft selected.\n\n"
                     "Use /recent then /draft 1 first."
                 )
 
@@ -1236,7 +1236,7 @@ class TelegramCommandAgent:
             if not session:
 
                 return (
-                    "⚠️ No draft selected.\n\n"
+                    "◦ No draft selected.\n\n"
                     "Use /recent then /draft 1 first."
                 )
 
@@ -1274,7 +1274,7 @@ class TelegramCommandAgent:
             if not session:
 
                 return (
-                    "⚠️ No draft selected.\n\n"
+                    "◦ No draft selected.\n\n"
                     "Use /recent then /draft 1 first."
                 )
 
@@ -1320,7 +1320,7 @@ class TelegramCommandAgent:
             if not session:
 
                 return (
-                    "⚠️ No draft selected.\n\n"
+                    "◦ No draft selected.\n\n"
                     "Use /recent then /draft 1 first."
                 )
 
@@ -1358,7 +1358,7 @@ class TelegramCommandAgent:
             if not session:
 
                 return (
-                    "⚠️ No draft found.\n\n"
+                    "◦ No draft found.\n\n"
                     "Use /recent then /draft 1 first."
                 )
 
@@ -1384,7 +1384,7 @@ class TelegramCommandAgent:
             if not user:
 
                 return (
-                    "❌ No Gmail account connected.\n\n"
+                    "✗ No Gmail account connected.\n\n"
                     "Visit the web dashboard to connect Gmail, "
                     "then send /start."
                 )
@@ -1398,13 +1398,13 @@ class TelegramCommandAgent:
             if not accounts:
 
                 return (
-                    "❌ No Gmail accounts found.\n\n"
+                    "✗ No Gmail accounts found.\n\n"
                     "Visit the web dashboard to connect Gmail, "
                     "then send /start."
                 )
 
             output = [
-                "📧 Connected Accounts\n"
+                "◉ Connected Accounts\n"
             ]
 
             active = (
@@ -1421,7 +1421,7 @@ class TelegramCommandAgent:
                     account["id"]
                     == active
                 ):
-                    prefix = "✅"
+                    prefix = "●"
 
                 output.append(
                     f"{prefix} "
@@ -1429,7 +1429,7 @@ class TelegramCommandAgent:
                 )
 
             output.append(
-                "\n💡 Switch: /use email@gmail.com"
+                "\n› Switch: /use email@gmail.com"
             )
 
             return "\n".join(output)
@@ -1467,7 +1467,7 @@ class TelegramCommandAgent:
             if not account:
 
                 return (
-                    f"❌ Account not found: {email}\n\n"
+                    f"✗ Account not found: {email}\n\n"
                     "Use /accounts to see connected accounts."
                 )
 
@@ -1477,8 +1477,8 @@ class TelegramCommandAgent:
             )
 
             return (
-                "✅ Active account switched\n\n"
-                f"📧 {email}"
+                "● Active account switched\n\n"
+                f"◉ {email}"
             )
 
         # ── Fallback ─────────────────────────────────
